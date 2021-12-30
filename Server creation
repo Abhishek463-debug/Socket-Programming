@@ -1,0 +1,46 @@
+import socket
+import threading
+import time 
+
+PORT = 5050
+SERVER = socket.gethostbyname(socket.gethostname())
+HEADER = 64
+FORMAT = 'utf-8'
+
+
+ADDR = (SERVER, PORT)
+#print(SERVER)
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(ADDR)
+
+def start():
+    server.listen()
+    print(f"{SERVER} is listening!")
+    while True:
+        conn, addr = server.accept()
+        thread = threading.Thread(target = client_run, args = (conn, addr))
+        thread.start()
+        print(f"[ACTIVE CONNECTIONS]: {threading.active_count() - 1}")
+
+
+def client_run(conn, addr):
+    print(f"{addr} is connected to this server now!")
+    connected = True
+    while connected:
+        length = conn.recv(HEADER).decode(FORMAT)
+        if length:
+            msg_length = int(length)
+            msg = conn.recv(msg_length).decode(FORMAT)
+            print(f"{addr} is sending you a message: {msg}")
+            conn.send("Your message has been received!!".encode(FORMAT))
+            if msg == 'DISCONNECT':
+                connected = False
+
+
+    conn.close()
+    print(f"The server: {SERVER} is closed now.")
+
+
+
+print("[STARTING] Server is running...")
+start()
